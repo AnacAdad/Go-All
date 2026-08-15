@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../config/firebaseConfig'; // Importando a nossa conexão
+import {createUserWithEmailAndPassword,signInWithEmailAndPassword,updateProfile} from 'firebase/auth';
+import { auth } from '../config/firebaseConfig';
 
 export function Auth() {
   const [isLogin, setIsLogin] = useState(true);
-  
+
   // Estados para capturar o que o usuário digita
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -17,22 +17,33 @@ export function Auth() {
 
   // Função que é disparada ao clicar no botão Entrar/Cadastrar
   const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault(); // Evita que a página recarregue
-    setErrorMsg(''); // Limpa erros anteriores
+    e.preventDefault();
+    setErrorMsg('');
 
     try {
       if (isLogin) {
         // Fluxo de Login
         await signInWithEmailAndPassword(auth, email, password);
-        navigate('/'); // Se der certo, manda para o mapa!
+
+        navigate('/');
       } else {
         // Fluxo de Cadastro
-        await createUserWithEmailAndPassword(auth, email, password);
-        // Dica: Mais para frente, vamos salvar o 'name' no Firestore aqui!
-        navigate('/'); // Se der certo, manda para o mapa!
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+
+        // Salva o nome do usuário no perfil do Firebase Authentication
+        await updateProfile(userCredential.user, {
+          displayName: name.trim()
+        });
+
+        navigate('/');
       }
     } catch (error: any) {
-      console.error("Erro na autenticação:", error);
+      console.error('Erro na autenticação:', error);
+
       // Tradução simples de alguns erros comuns do Firebase
       if (error.code === 'auth/invalid-credential') {
         setErrorMsg('E-mail ou senha incorretos.');
@@ -40,6 +51,8 @@ export function Auth() {
         setErrorMsg('Esse e-mail já está cadastrado.');
       } else if (error.code === 'auth/weak-password') {
         setErrorMsg('A senha deve ter pelo menos 6 caracteres.');
+      } else if (error.code === 'auth/invalid-email') {
+        setErrorMsg('Digite um e-mail válido.');
       } else {
         setErrorMsg('Ocorreu um erro. Tente novamente.');
       }
@@ -49,11 +62,12 @@ export function Auth() {
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 font-sans">
       <div className="max-w-md w-full bg-slate-800 rounded-3xl shadow-[0_0_40px_rgba(79,70,229,0.15)] p-8 border border-slate-700">
-        
+
         <div className="text-center mb-8">
           <h2 className="text-3xl font-serif font-bold text-slate-100 tracking-wide mb-2">
             {isLogin ? 'Bem-vindo de volta' : 'Crie sua conta'}
           </h2>
+
           <p className="text-slate-400 text-sm">
             {isLogin
               ? 'Entre para avaliar e descobrir novos lugares.'
@@ -69,9 +83,13 @@ export function Auth() {
         )}
 
         <form className="space-y-5" onSubmit={handleAuth}>
+
           {!isLogin && (
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Nome completo</label>
+              <label className="block text-sm font-medium text-slate-300 mb-1">
+                Nome completo
+              </label>
+
               <input
                 type="text"
                 value={name}
@@ -84,7 +102,10 @@ export function Auth() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">E-mail</label>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              E-mail
+            </label>
+
             <input
               type="email"
               value={email}
@@ -96,7 +117,10 @@ export function Auth() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Senha</label>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Senha
+            </label>
+
             <input
               type="password"
               value={password}
@@ -117,9 +141,11 @@ export function Auth() {
 
         <div className="mt-6 text-center">
           <button
+            type="button"
             onClick={() => {
               setIsLogin(!isLogin);
-              setErrorMsg(''); // Limpa erros ao trocar de tela
+              setErrorMsg('');
+              setName('');
             }}
             className="text-slate-400 hover:text-slate-200 text-sm transition-colors cursor-pointer"
           >

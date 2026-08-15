@@ -5,9 +5,10 @@ import L from 'leaflet';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import {Link} from 'react-router-dom';
 
-import type { Restaurant } from '../types';
-import { getRestaurants } from '../services/restaurantService';
+import type { Place } from '../types';
+import { getPlaces } from '../services/placeService';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -24,23 +25,22 @@ interface MapProps {
 }
 
 export function Map({ activeFilters }: MapProps) {
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [places, setPlaces] = useState<Place[]>([]);
 
   useEffect(() => {
-    const loadRestaurants = async () => {
-      const data = await getRestaurants();
-      setRestaurants(data);
+    const loadPlaces = async () => {
+      const data = await getPlaces();
+      setPlaces(data);
     };
-    loadRestaurants();
+    loadPlaces();
   }, []); // Carrega do banco de dados apenas 1 vez ao abrir a tela
 
-  // Aqui acontece a mágica do filtro!
   // Se não tem filtro clicado, mostra todos. Se tem, filtra a lista.
-  const filteredRestaurants = activeFilters.length === 0 
-    ? restaurants 
-    : restaurants.filter(rest => {
-        // Verifica se o restaurante possui TODAS as tags que o usuário selecionou
-        return activeFilters.every(filter => rest.verifiedFeatures.includes(filter));
+  const filteredPlaces = activeFilters.length === 0 
+    ? places 
+    : places.filter(place => {
+        // Verifica se o lugar possui TODAS as tags que o usuário selecionou
+        return activeFilters.every(filter => place.verifiedFeatures.includes(filter));
       });
 
   return (
@@ -57,23 +57,32 @@ export function Map({ activeFilters }: MapProps) {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           
-          {/* Agora nós mapeamos e desenhamos apenas a lista FILTRADA */}
-          {filteredRestaurants.map((rest) => (
+          {/* Agora mapeamos e desenhamos apenas a lista FILTRADA */}
+          {filteredPlaces.map((place) => (
             <Marker 
-              key={rest.id} 
-              position={[rest.location.latitude, rest.location.longitude]}
+              key={place.id} 
+              position={[
+                place.location.latitude, 
+                place.location.longitude]}
             >
               <Popup>
                 <div className="text-sm min-w-[150px]">
-                  <strong className="text-base text-gray-800">{rest.name}</strong>
-                  <p className="text-xs text-gray-500 mt-1">{rest.address}</p>
+                  <strong className="text-base text-gray-800">{place.name}</strong>
+                  {place.category && (<p className="text-xs font-medium text-indigo-600 mt-1">{place.category}</p>)}
+                  <p className="text-xs text-gray-500 mt-1">{place.address}</p>
                   <div className="mt-3 text-gray-600 flex flex-col gap-1">
-                    {rest.verifiedFeatures.map(feature => (
+                    {place.verifiedFeatures.map(feature => (
                       <span key={feature} className="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md text-xs font-medium border border-indigo-100">
                         ✓ {feature}
                       </span>
                     ))}
                   </div>
+                  <Link
+                    to={`/local/${place.id}`}
+                    className="block mt-3 bg-indigo-600 hover:bg-indigo-500 text-white text-center px-3 py-2 rounded-lg font-medium transition-colors"
+                 >
+                   Ver detalhes
+                 </Link>
                 </div>
               </Popup>
             </Marker>

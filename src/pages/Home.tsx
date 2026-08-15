@@ -4,7 +4,7 @@ import { Map } from '../components/map';
 import { Filters } from '../components/Filters';
 
 export function Home() {
-  // Estado para guardar quais filtros a pessoa clicou (ex: ['Rampa de acesso', 'Libras'])
+  // Estado para guardar quais filtros a pessoa clicou 
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
   return (
@@ -28,7 +28,7 @@ export function Home() {
             setActiveFilters={setActiveFilters} 
           />
           
-          {/* Passamos apenas a lista de filtros ativos para o Mapa saber o que esconder */}
+          {/* apenas a lista de filtros ativos para o Mapa saber o que esconder */}
           <Map activeFilters={activeFilters} />
         </section>
       </main>

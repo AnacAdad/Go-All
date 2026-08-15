@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, GeoPoint } from 'firebase/firestore';
-import { db } from '../config/firebaseConfig';
+import { collection, addDoc, GeoPoint, serverTimestamp } from 'firebase/firestore';
+import { auth,db } from '../config/firebaseConfig';
 import { Navbar } from '../components/Navbar';
 
 const accessibilityTags = [
@@ -14,10 +14,11 @@ const accessibilityTags = [
   'Estacionamento'
 ];
 
-export function AddRestaurant() {
+export function AddPlace() {
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
+  const [category, setCategory] = useState(''); 
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -35,11 +36,15 @@ export function AddRestaurant() {
     setIsSubmitting(true);
 
     try {
-      // 1. Consultar a API gratuita do OpenStreetMap para achar a coordenada real do endereço
-      // Dica: Adicionamos "Teresina, PI" na busca para garantir que ele ache na sua cidade
+      const user = auth.currentUser;
+      if (!user) {
+        alert('Você precisa estar logado para adicionar um local.');
+        return;
+      }
       const searchQuery = encodeURIComponent(`${address}, Teresina, Piauí, Brasil`);
       const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&limit=1`);
       const geocodeData = await response.json();
+      
 
       let finalLat = -5.0892; // Coordenada padrão (Centro) caso a API não ache a rua
       let finalLng = -42.8016;
@@ -53,18 +58,25 @@ export function AddRestaurant() {
       }
 
       // 2. Salvar no Firebase com a coordenada real
-      await addDoc(collection(db, 'restaurants'), {
+      if (!user){
+        alert('Você precisa estar logado para adicionar um local.');
+        return;
+      }
+      await addDoc(collection(db, 'places'), {
         name,
         address,
+        category,
         location: new GeoPoint(finalLat, finalLng),
         verifiedFeatures: selectedFeatures,
-        averageRating: 5
+        averageRating: 0,
+        createdBy: user.uid,
+        createdAt: serverTimestamp(),
       });
 
       // 3. Voltar para a tela inicial
       navigate('/');
     } catch (error) {
-      console.error("Erro ao salvar restaurante:", error);
+      console.error("Erro ao salvar local:", error);
       alert("Ops! Ocorreu um erro ao salvar.");
     } finally {
       setIsSubmitting(false);
@@ -81,24 +93,55 @@ export function AddRestaurant() {
               Cadastrar Novo Local
             </h1>
             <p className="text-slate-500 text-sm mt-1">
-              Ajude a comunidade adicionando um restaurante e suas opções de acessibilidade.
+             Ajude a comunidade adicionando um local e suas informações de acessibilidade.
             </p>
           </header>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Campo Nome */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Nome do Restaurante</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Nome do Local</label>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                placeholder="Ex: Pizzaria Forno de Ouro"
+                placeholder="Ex: Shopping Rio Poty"
               />
             </div>
 
+            <div>
+  <label className="block text-sm font-medium text-slate-700 mb-1">
+    Categoria do Local
+  </label>
+
+  <select
+    required
+    value={category}
+    onChange={(e) => setCategory(e.target.value)}
+    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+  >
+    <option value="">Selecione uma categoria</option>
+    <option value="Restaurante">Restaurante</option>
+    <option value="Bar">Bar</option>
+    <option value="Cafeteria">Cafeteria</option>
+    <option value="Shopping">Shopping</option>
+    <option value="Loja">Loja</option>
+    <option value="Supermercado">Supermercado</option>
+    <option value="Hospital">Hospital</option>
+    <option value="Clínica">Clínica</option>
+    <option value="Farmácia">Farmácia</option>
+    <option value="Escola">Escola</option>
+    <option value="Faculdade">Faculdade</option>
+    <option value="Hotel">Hotel</option>
+    <option value="Praça">Praça</option>
+    <option value="Cinema">Cinema</option>
+    <option value="Academia">Academia</option>
+    <option value="Órgão Público">Órgão Público</option>
+    <option value="Outro">Outro</option>
+  </select>
+</div>
             {/* Campo Endereço */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Endereço Completo</label>
