@@ -36,12 +36,14 @@ export function Map({ activeFilters }: MapProps) {
   }, []); // Carrega do banco de dados apenas 1 vez ao abrir a tela
 
   // Se não tem filtro clicado, mostra todos. Se tem, filtra a lista.
-  const filteredPlaces = activeFilters.length === 0 
-    ? places 
-    : places.filter(place => {
-        // Verifica se o lugar possui TODAS as tags que o usuário selecionou
-        return activeFilters.every(filter => place.verifiedFeatures.includes(filter));
-      });
+  const filteredPlaces = places.filter((place) => {
+  return (
+    activeFilters.length === 0 ||
+    activeFilters.every((filter) =>
+      place.verifiedFeatures.includes(filter)
+    )
+  );
+});
 
   return (
     <div className="w-full relative">

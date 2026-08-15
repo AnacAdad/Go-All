@@ -74,6 +74,12 @@ export function Navbar() {
 
           {user ? (
             <div className="flex items-center gap-4">
+              <Link
+                to="/favoritos"
+                className="hover:text-slate-100 transition-colors duration-300"
+              >
+                ♥ Meus Favoritos
+</Link>
               <span className="text-slate-300">
                 Olá,{' '}
                 <strong className="text-indigo-400">

@@ -11,7 +11,9 @@ import {
   serverTimestamp,
   query,
   where,
-  onSnapshot
+  onSnapshot,
+  arrayUnion,
+  arrayRemove
 } from 'firebase/firestore';
 
 import type { Timestamp } from 'firebase/firestore';
@@ -48,6 +50,9 @@ export function PlaceDetails() {
   const [loadingReviews, setLoadingReviews] = useState(true);
 
   const [isEditingReview, setIsEditingReview] = useState(false);
+
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isUpdatingFavorite, setIsUpdatingFavorite] = useState(false);
 
   // Acompanha o usuário logado
   useEffect(() => {
@@ -133,6 +138,34 @@ export function PlaceDetails() {
     };
   }, [id]);
 
+  // Verifica se o local está nos favoritos do usuário
+  useEffect(() => {
+  const checkFavorite = async () => {
+    if (!user || !id) {
+      setIsFavorite(false);
+      return;
+    }
+
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      const userSnapshot = await getDoc(userRef);
+
+      if (userSnapshot.exists()) {
+        const data = userSnapshot.data();
+        const favorites = data.favorites || [];
+
+        setIsFavorite(favorites.includes(id));
+      } else {
+        setIsFavorite(false);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar favoritos:', error);
+    }
+  };
+
+  checkFavorite();
+}, [user, id]);
+
   // Calcula a média das avaliações
   const averageRating =
     reviews.length > 0
@@ -149,117 +182,165 @@ export function PlaceDetails() {
       ) || null
     : null;
 
-  // Publicar ou editar avaliação
-  const handleReview = async (e: React.FormEvent) => {
-    e.preventDefault();
+    // Favoritar ou remover dos favoritos
+const handleFavorite = async () => {
+  if (!user) {
+    alert('Você precisa estar logado para favoritar um local.');
+    return;
+  }
 
-    if (!user) {
-      alert('Você precisa estar logado para avaliar este local.');
-      return;
-    }
+  if (!id) {
+    return;
+  }
 
-    if (!id) {
-      return;
-    }
+  setIsUpdatingFavorite(true);
 
-    if (rating < 1 || rating > 5) {
-      alert('Escolha uma nota de 1 a 5 estrelas.');
-      return;
-    }
+  try {
+    const userRef = doc(db, 'users', user.uid);
 
-    if (!comment.trim()) {
-      alert('Escreva um comentário sobre o local.');
-      return;
-    }
-
-    setIsSubmittingReview(true);
-
-    try {
-      // =========================
-      // EDITAR AVALIAÇÃO
-      // =========================
-      if (isEditingReview && userReview) {
-        const reviewRef = doc(
-          db,
-          'reviews',
-          userReview.id
-        );
-
-        await updateDoc(reviewRef, {
-          rating,
-          comment: comment.trim(),
-          updatedAt: serverTimestamp()
-        });
-
-        alert('Avaliação atualizada com sucesso!');
-
-        setRating(0);
-        setComment('');
-        setIsEditingReview(false);
-
-        return;
-      }
-
-      // =========================
-      // VERIFICAR DUPLICIDADE
-      // =========================
-      const existingReviewQuery = query(
-        collection(db, 'reviews'),
-        where('placeId', '==', id),
-        where('userId', '==', user.uid)
+    if (isFavorite) {
+      await setDoc(
+        userRef,
+        {
+          favorites: arrayRemove(id)
+        },
+        { merge: true }
       );
 
-      const existingReviews = await getDocs(
-        existingReviewQuery
+      setIsFavorite(false);
+    } else {
+      await setDoc(
+        userRef,
+        {
+          favorites: arrayUnion(id)
+        },
+        { merge: true }
       );
 
-      if (!existingReviews.empty) {
-        alert('Você já avaliou este local.');
-        return;
-      }
+      setIsFavorite(true);
+    }
+  } catch (error) {
+    console.error('Erro ao atualizar favorito:', error);
+    alert('Não foi possível atualizar seus favoritos.');
+  } finally {
+    setIsUpdatingFavorite(false);
+  }
+};
 
-      // =========================
-      // CRIAR NOVA AVALIAÇÃO
-      // =========================
-      const reviewId = `${id}_${user.uid}`;
 
+// Publicar ou editar avaliação
+const handleReview = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (!user) {
+    alert('Você precisa estar logado para avaliar este local.');
+    return;
+  }
+
+  if (!id) {
+    return;
+  }
+
+  if (rating < 1 || rating > 5) {
+    alert('Escolha uma nota de 1 a 5 estrelas.');
+    return;
+  }
+
+  if (!comment.trim()) {
+    alert('Escreva um comentário sobre o local.');
+    return;
+  }
+
+  setIsSubmittingReview(true);
+
+  try {
+    // =========================
+    // EDITAR AVALIAÇÃO
+    // =========================
+    if (isEditingReview && userReview) {
       const reviewRef = doc(
         db,
         'reviews',
-        reviewId
+        userReview.id
       );
 
-      await setDoc(reviewRef, {
-        placeId: id,
-        userId: user.uid,
-        userName:
-          user.displayName ||
-          user.email?.split('@')[0] ||
-          'Usuário',
+      await updateDoc(reviewRef, {
         rating,
         comment: comment.trim(),
-        createdAt: serverTimestamp()
+        updatedAt: serverTimestamp()
       });
 
-      alert('Avaliação publicada com sucesso!');
+      alert('Avaliação atualizada com sucesso!');
 
       setRating(0);
       setComment('');
+      setIsEditingReview(false);
 
-    } catch (error) {
-      console.error(
-        'Erro ao salvar avaliação:',
-        error
-      );
-
-      alert(
-        'Não foi possível salvar sua avaliação.'
-      );
-
-    } finally {
-      setIsSubmittingReview(false);
+      return;
     }
-  };
+
+    // =========================
+    // VERIFICAR DUPLICIDADE
+    // =========================
+    const existingReviewQuery = query(
+      collection(db, 'reviews'),
+      where('placeId', '==', id),
+      where('userId', '==', user.uid)
+    );
+
+    const existingReviews = await getDocs(
+      existingReviewQuery
+    );
+
+    if (!existingReviews.empty) {
+      alert('Você já avaliou este local.');
+      return;
+    }
+
+    // =========================
+    // CRIAR NOVA AVALIAÇÃO
+    // =========================
+    const reviewId = `${id}_${user.uid}`;
+
+    const reviewRef = doc(
+      db,
+      'reviews',
+      reviewId
+    );
+
+    await setDoc(reviewRef, {
+      placeId: id,
+      userId: user.uid,
+      userName:
+        user.displayName ||
+        user.email?.split('@')[0] ||
+        'Usuário',
+      rating,
+      comment: comment.trim(),
+      createdAt: serverTimestamp()
+    });
+
+    alert('Avaliação publicada com sucesso!');
+
+    setRating(0);
+    setComment('');
+
+  } catch (error) {
+    console.error(
+      'Erro ao salvar avaliação:',
+      error
+    );
+
+    alert(
+      'Não foi possível salvar sua avaliação.'
+    );
+
+  } finally {
+    setIsSubmittingReview(false);
+  }
+};
+
+  
 
   if (loading) {
     return (
@@ -325,6 +406,24 @@ export function PlaceDetails() {
           <p className="text-slate-400 mb-6">
             📍 {place.address}
           </p>
+
+         {/* Favoritar local */}
+<button
+  type="button"
+  onClick={handleFavorite}
+  disabled={isUpdatingFavorite}
+  className={`mb-6 px-5 py-2 rounded-xl font-medium transition-colors cursor-pointer ${
+    isFavorite
+      ? 'bg-pink-600 hover:bg-pink-500 text-white'
+      : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+  } disabled:opacity-60`}
+>
+  {isUpdatingFavorite
+    ? 'Atualizando...'
+    : isFavorite
+      ? '♥ Favoritado'
+      : '♡ Favoritar local'}
+</button>
 
           {/* Média das avaliações */}
           <div className="mb-8">

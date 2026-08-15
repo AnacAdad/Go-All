@@ -1,44 +1,133 @@
 # ♿ GoAll
 
-O **GoAll** é uma aplicação web criada com o objetivo de ajudar pessoas com deficiência a encontrarem e compartilharem informações sobre a acessibilidade de diferentes locais.
+O **GoAll** é uma aplicação web colaborativa voltada para acessibilidade.
 
-A proposta é permitir que o usuário consulte, antes de sair de casa, quais recursos de acessibilidade estão disponíveis em restaurantes, shoppings, hospitais, escolas, hotéis, lojas, praças e diversos outros estabelecimentos.
+Seu objetivo é ajudar pessoas com deficiência a encontrarem informações sobre a acessibilidade de locais antes de visitá-los, reunindo dados sobre recursos disponíveis, avaliações da comunidade e localização em um mapa interativo.
+
+A plataforma permite consultar locais já cadastrados no GoAll e também pesquisar estabelecimentos disponíveis no OpenStreetMap.
+
+---
 
 ## 💜 Sobre o projeto
 
-A acessibilidade nem sempre é uma informação fácil de encontrar.
+Encontrar informações confiáveis sobre acessibilidade ainda pode ser difícil.
 
-Muitas vezes, antes de visitar um local, uma pessoa com deficiência precisa descobrir se o estabelecimento possui rampa, banheiro adaptado, estacionamento acessível ou outros recursos essenciais.
+Antes de visitar um restaurante, shopping, hospital, escola, hotel ou qualquer outro local, muitas pessoas precisam saber se existem recursos como:
 
-O **GoAll** busca reunir essas informações em um único lugar de forma colaborativa.
+* rampa de acesso;
+* banheiro adaptado;
+* piso tátil;
+* estacionamento acessível;
+* atendimento em Libras;
+* mobiliário adequado.
 
-Os próprios usuários podem cadastrar locais e compartilhar suas experiências por meio de avaliações e comentários.
+O **GoAll** busca reunir essas informações em uma plataforma colaborativa, permitindo que a própria comunidade cadastre locais, avalie experiências e compartilhe informações de acessibilidade.
+
+---
 
 ## ✨ Funcionalidades
 
 Atualmente, o GoAll possui:
 
-* 🗺️ Mapa interativo com os locais cadastrados
-* 📍 Visualização dos locais através de marcadores no mapa
-* 🔎 Filtros por recursos de acessibilidade
+* 🗺️ Mapa interativo com Leaflet
+* 📍 Marcadores dos locais cadastrados
+* 🔎 Busca híbrida GoAll + OpenStreetMap
+* ♿ Filtros por recursos de acessibilidade
 * ➕ Cadastro de novos locais
 * 🏷️ Categorias de estabelecimentos
-* 📌 Conversão de endereço para coordenadas geográficas
-* 🔐 Cadastro e login de usuários
-* 👤 Identificação do usuário pelo nome
-* 🛡️ Proteção de rotas para usuários autenticados
-* ♿ Cadastro de recursos de acessibilidade
+* 🌎 Busca de endereços e coordenadas pelo OpenStreetMap
+* 🔐 Cadastro e login com Firebase Authentication
+* 👤 Nome do usuário salvo no perfil
+* 🛡️ Rotas protegidas
 * 📄 Página de detalhes de cada local
-* ⭐ Avaliação de locais de 1 a 5 estrelas
-* 💬 Comentários dos usuários
+* ⭐ Avaliações de 1 a 5 estrelas
+* 💬 Comentários da comunidade
 * 📊 Cálculo automático da média das avaliações
-* ⚡ Atualização das avaliações em tempo real
+* ⚡ Avaliações atualizadas em tempo real
 * ✏️ Edição da própria avaliação
-* 🚫 Prevenção de múltiplas avaliações do mesmo usuário para o mesmo local
+* 🚫 Prevenção de múltiplas avaliações pelo mesmo usuário
+* ❤️ Favoritar locais
+* 📚 Página “Meus Favoritos”
+* 👤 Registro de quem cadastrou cada local
+* 🕒 Registro da data de criação
+* 🚫 Prevenção de cadastro duplicado de locais
 
-## ♿ Recursos de acessibilidade
+---
 
-Entre os recursos que podem ser informados estão:
+# 🔎 Busca híbrida
+
+Uma das funcionalidades principais do GoAll é a busca híbrida.
+
+A aplicação procura o termo informado em duas fontes:
+
+```text
+Usuário pesquisa um local
+        ↓
+┌────────────────────┐
+│ Firestore / GoAll  │
+└────────────────────┘
+        +
+┌────────────────────┐
+│   OpenStreetMap    │
+└────────────────────┘
+```
+
+### Local já cadastrado no GoAll
+
+O usuário pode acessar:
+
+* informações de acessibilidade;
+* avaliações;
+* comentários;
+* categoria;
+* endereço;
+* favoritos;
+* detalhes completos.
+
+### Local encontrado apenas no OpenStreetMap
+
+O sistema informa que ainda não existem informações de acessibilidade cadastradas.
+
+O usuário pode selecionar:
+
+```text
++ Adicionar informações de acessibilidade
+```
+
+O formulário de cadastro é aberto automaticamente com:
+
+* nome;
+* endereço;
+* latitude;
+* longitude.
+
+Assim, o usuário precisa apenas informar a categoria e os recursos de acessibilidade.
+
+---
+
+# 🗺️ Mapa
+
+O mapa utiliza:
+
+* **Leaflet**
+* **React Leaflet**
+* **OpenStreetMap**
+
+Os locais cadastrados no Firestore são exibidos como marcadores.
+
+Ao clicar em um marcador, o usuário pode visualizar informações básicas e selecionar:
+
+```text
+Ver detalhes
+```
+
+para acessar a página completa do local.
+
+---
+
+# ♿ Recursos de acessibilidade
+
+Atualmente podem ser cadastrados:
 
 * Rampa de acesso
 * Banheiro adaptado
@@ -48,9 +137,24 @@ Entre os recursos que podem ser informados estão:
 * Mesa acessível
 * Estacionamento
 
-## 🏢 Categorias de locais
+Os filtros permitem combinar diferentes critérios.
 
-O sistema permite cadastrar diferentes tipos de locais, como:
+Exemplo:
+
+```text
+✓ Rampa de acesso
+✓ Banheiro adaptado
+```
+
+O mapa passa a apresentar somente locais que possuem os recursos selecionados.
+
+---
+
+# 🏢 Categorias de locais
+
+O GoAll não é limitado a restaurantes.
+
+Entre as categorias disponíveis estão:
 
 * Restaurante
 * Bar
@@ -70,54 +174,23 @@ O sistema permite cadastrar diferentes tipos de locais, como:
 * Órgão Público
 * Outros
 
-## 🛠️ Tecnologias utilizadas
+---
 
-O projeto foi desenvolvido utilizando:
+# ⭐ Sistema de avaliações
 
-* **React**
-* **TypeScript**
-* **Vite**
-* **Tailwind CSS**
-* **Firebase Authentication**
-* **Cloud Firestore**
-* **Leaflet**
-* **React Leaflet**
-* **OpenStreetMap**
-* **Nominatim API**
-* **React Router**
-
-## 🔥 Firebase
-
-O Firebase é utilizado para autenticação e armazenamento dos dados da aplicação.
-
-### Authentication
-
-Responsável por:
-
-* cadastro de usuários;
-* login;
-* logout;
-* armazenamento do nome do usuário;
-* identificação do usuário autenticado.
-
-### Firestore
-
-Os dados principais são organizados em coleções como:
+Usuários autenticados podem avaliar um local utilizando notas de 1 a 5 estrelas:
 
 ```text
-places
-└── placeId
-    ├── name
-    ├── category
-    ├── address
-    ├── location
-    ├── verifiedFeatures
-    ├── averageRating
-    ├── createdBy
-    └── createdAt
+★
+★★
+★★★
+★★★★
+★★★★★
 ```
 
-E as avaliações:
+Além da nota, é possível escrever um comentário contando a experiência no local.
+
+Cada avaliação possui:
 
 ```text
 reviews
@@ -131,56 +204,174 @@ reviews
     └── updatedAt
 ```
 
-## 🗺️ Mapa
+O sistema:
 
-O mapa utiliza **Leaflet + React Leaflet** com dados cartográficos do **OpenStreetMap**.
+* calcula automaticamente a média;
+* mostra a quantidade de avaliações;
+* atualiza os comentários em tempo real;
+* impede múltiplas avaliações do mesmo usuário para o mesmo local;
+* permite editar a própria avaliação.
 
-Os locais cadastrados no Firestore são exibidos como marcadores.
+---
 
-Ao selecionar um marcador, o usuário pode visualizar informações básicas e acessar a página completa do local.
+# ❤️ Favoritos
 
-## 🔎 Filtros
+Usuários autenticados podem salvar locais como favoritos.
 
-O GoAll permite filtrar os locais de acordo com os recursos de acessibilidade selecionados.
-
-Por exemplo:
-
-```text
-Rampa de acesso
-+
-Banheiro adaptado
-```
-
-O mapa passa a apresentar somente locais que atendem aos critérios selecionados.
-
-## ⭐ Sistema de avaliações
-
-Usuários autenticados podem avaliar um local utilizando uma nota de:
+Na página de detalhes é possível utilizar:
 
 ```text
-★
-★★
-★★★
-★★★★
-★★★★★
+♡ Favoritar local
 ```
 
-Além da nota, o usuário pode escrever um comentário contando sua experiência.
+Depois de favoritado:
 
-As avaliações são atualizadas em tempo real e utilizadas para calcular a média do local.
+```text
+♥ Favoritado
+```
 
-Cada usuário pode possuir apenas uma avaliação por local, podendo posteriormente editar sua própria avaliação.
+Os IDs dos locais são armazenados no documento do usuário:
 
-## 📂 Estrutura principal
+```text
+users
+└── userId
+    └── favorites
+        ├── placeId
+        ├── placeId
+        └── placeId
+```
+
+A página:
+
+```text
+♥ Meus Favoritos
+```
+
+permite visualizar os locais salvos e acessar seus detalhes.
+
+---
+
+# 🚫 Prevenção de locais duplicados
+
+O GoAll verifica se um local já foi cadastrado antes de criar um novo documento.
+
+Quando disponíveis, são utilizados identificadores provenientes do OpenStreetMap:
+
+```text
+osmType
+osmId
+osmKey
+```
+
+Também existe uma verificação alternativa utilizando:
+
+```text
+nome + coordenadas
+```
+
+Isso permite detectar inclusive locais que não possuam identificadores do OpenStreetMap disponíveis.
+
+Se o local já existir, o sistema informa:
+
+```text
+Este local já está cadastrado no GoAll.
+```
+
+e direciona o usuário para a página correspondente.
+
+---
+
+# 🔥 Firebase
+
+O Firebase é utilizado para autenticação e armazenamento dos dados.
+
+## Authentication
+
+Responsável por:
+
+* cadastro;
+* login;
+* logout;
+* identificação do usuário;
+* armazenamento do nome;
+* controle de acesso às funcionalidades protegidas.
+
+## Cloud Firestore
+
+### Locais
+
+```text
+places
+└── placeId
+    ├── name
+    ├── category
+    ├── address
+    ├── location
+    ├── verifiedFeatures
+    ├── averageRating
+    ├── createdBy
+    ├── createdAt
+    ├── osmType
+    ├── osmId
+    └── osmKey
+```
+
+Alguns campos relacionados ao OpenStreetMap podem não existir em locais antigos ou em resultados externos que não forneçam esses identificadores.
+
+### Avaliações
+
+```text
+reviews
+└── reviewId
+    ├── placeId
+    ├── userId
+    ├── userName
+    ├── rating
+    ├── comment
+    ├── createdAt
+    └── updatedAt
+```
+
+### Usuários
+
+```text
+users
+└── userId
+    └── favorites
+```
+
+---
+
+# 🛠️ Tecnologias utilizadas
+
+O projeto utiliza:
+
+* **React**
+* **TypeScript**
+* **Vite**
+* **Tailwind CSS**
+* **React Router**
+* **Firebase Authentication**
+* **Cloud Firestore**
+* **Leaflet**
+* **React Leaflet**
+* **OpenStreetMap**
+* **Nominatim API**
+
+---
+
+# 📂 Estrutura principal
 
 ```text
 src/
 ├── assets/
+│
 ├── components/
 │   ├── Filters.tsx
 │   ├── map.tsx
 │   ├── Navbar.tsx
-│   └── ProtectedRoute.tsx
+│   ├── ProtectedRoute.tsx
+│   └── SearchBar.tsx
 │
 ├── config/
 │   └── firebaseConfig.ts
@@ -189,6 +380,7 @@ src/
 │   ├── About.tsx
 │   ├── AddPlace.tsx
 │   ├── Auth.tsx
+│   ├── Favorites.tsx
 │   ├── Home.tsx
 │   └── PlaceDetails.tsx
 │
@@ -200,7 +392,9 @@ src/
 └── types.ts
 ```
 
-## 🚀 Como executar o projeto
+---
+
+# 🚀 Como executar o projeto
 
 Clone o repositório:
 
@@ -208,7 +402,7 @@ Clone o repositório:
 git clone https://github.com/AnacAdad/Go-All.git
 ```
 
-Entre na pasta do projeto:
+Entre na pasta:
 
 ```bash
 cd Go-All
@@ -220,50 +414,56 @@ Instale as dependências:
 npm install
 ```
 
-Execute o projeto:
+Execute:
 
 ```bash
 npm run dev
 ```
 
-Depois, abra no navegador o endereço informado pelo Vite.
+O Vite exibirá no terminal o endereço local da aplicação.
 
-## 🔐 Configuração do Firebase
+---
 
-Para executar o projeto com seu próprio Firebase, é necessário configurar uma aplicação no Firebase e habilitar:
+# 🔐 Configuração do Firebase
 
-* **Firebase Authentication**
-* **Cloud Firestore**
+Para utilizar seu próprio projeto Firebase é necessário habilitar:
 
-A configuração utilizada pela aplicação fica em:
+* Firebase Authentication
+* Cloud Firestore
+
+A configuração fica localizada em:
 
 ```text
 src/config/firebaseConfig.ts
 ```
 
-> Por segurança, projetos publicados devem evitar expor credenciais ou informações privadas desnecessárias no repositório.
+---
 
-## 🚧 Próximas funcionalidades
+# 🚧 Próximas funcionalidades
 
-Algumas funcionalidades planejadas para a evolução do GoAll:
+Funcionalidades planejadas para futuras versões:
 
-* ❤️ Favoritar locais
-* 📷 Fotos dos estabelecimentos
-* 🔍 Busca por nome ou endereço
+* 📷 Fotos dos locais
 * 📍 Utilização da localização atual do usuário
 * 📏 Mostrar locais próximos
-* 👤 Perfil do usuário
+* 👤 Perfil completo do usuário
 * 📚 Histórico de locais cadastrados
-* 📝 Gerenciamento dos próprios locais
-* 🚩 Denúncia ou correção de informações
-* 🎮 Gamificação e participação da comunidade
-* ✅ Validação colaborativa das informações de acessibilidade
+* ✏️ Edição dos próprios locais
+* 🚩 Denúncia e correção de informações
+* ✅ Validação colaborativa de acessibilidade
+* 🎮 Gamificação
+* 🔔 Notificações
+* 🧭 Rotas acessíveis
 
-## 🎯 Objetivo
+---
 
-Mais do que mostrar lugares em um mapa, o GoAll busca contribuir para que informações sobre acessibilidade sejam mais fáceis de encontrar.
+# 🎯 Objetivo
 
-A ideia é criar uma plataforma colaborativa em que a experiência de uma pessoa possa ajudar outra a planejar seus trajetos e escolher locais com mais informação e autonomia.
+O GoAll busca contribuir para que informações sobre acessibilidade sejam mais fáceis de encontrar.
+
+Mais do que mostrar pontos em um mapa, a proposta é construir uma comunidade onde experiências compartilhadas possam ajudar outras pessoas a planejar seus trajetos e escolher locais com mais informação e autonomia.
+
+---
 
 ## 👩‍💻 Autora
 
@@ -273,7 +473,8 @@ GitHub: **AnacAdad**
 
 ---
 
-### ♿ GoAll
+## ♿ GoAll
 
 **Acessibilidade começa com informação.**
+
 

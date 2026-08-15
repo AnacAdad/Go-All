@@ -5,6 +5,7 @@ import { AddPlace } from './pages/AddPlace'; // 1. Importamos a tela nova
 import { About } from './pages/About';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PlaceDetails } from './pages/PlaceDetails';
+import {Favorites} from './pages/Favorites';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/sobre" element={<About />} />
         <Route path="/novo" element={<ProtectedRoute><AddPlace /></ProtectedRoute>} /> 
         <Route path="/local/:id" element={<PlaceDetails />} />
+        <Route path="/favoritos" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );
